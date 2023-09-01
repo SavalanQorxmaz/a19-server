@@ -50,6 +50,8 @@ const updateUser = async (request,response)=>{
 
 }
 
+
+
 module.exports = {
     createUser,
     getAllUsers

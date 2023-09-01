@@ -37,6 +37,11 @@ app.post('/login',(req,res)=>{
     else{res.send('0')}
 })
 
+app.post('/account-request/:id',(req,res)=>{
+  console.log(req.body)
+  res.status(200).json(req.body)
+})
+
 // NEW USER
 
 // app.post('/signup',(req,res)=>{
