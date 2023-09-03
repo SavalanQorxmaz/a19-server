@@ -18,7 +18,7 @@ app.use(express.static(path.join(__dirname,'public')))
 
 
   app.post('/db', usersQuery.createUser);
-  app.get('/getallusers',usersQuery.getAllUsers)
+  app.post('/getallusers',usersQuery.getAllUsers)
 
   app.put('/change-password/:id',(req,res)=>{
     console.log(req.params.id)
@@ -27,14 +27,38 @@ app.use(express.static(path.join(__dirname,'public')))
 
   
 
-app.post('/login',(req,res)=>{
-
-    const userName = process.env.USER;
-    const password = process.env.PASSWORD;
-    if(userName===req.body.data.user && password=== req.body.data.password){
-        res.send('1')
+app.post('/login',async (request,response)=>{
+    const localUserName = process.env.USER;
+    const localUserPassword = process.env.PASSWORD;
+    if(localUserName===request.body.user ){
+      localUserPassword === request.body.password ? 
+      response.status(200).json({id: 0, rank: 'senior'})
+      :
+      response.status(200).json('0')
     }
-    else{res.send('0')}
+    else{
+     db.pool.query('SELECT * FROM users  WHERE user_name LIKE $1', [request.body.user], (error, results) => {
+     if (error) {
+       throw error;
+     }
+
+    if(results.rows.length===0){
+      response.status(200).json('-1');
+    }
+    else {
+      const person = results.rows[0]
+      if(person.user_password === request.body.password){
+        response.status(200).json({id:person.user_id,rank: person.user_rank});
+       }
+       
+       else {
+        response.status(200).json('0');
+       }
+    }
+
+
+   })
+    }
 })
 
 app.post('/account-request/:id',(req,res)=>{
