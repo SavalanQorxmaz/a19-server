@@ -20,10 +20,10 @@ app.use(express.static(path.join(__dirname,'public')))
   app.post('/db', usersQuery.createUser);
   app.post('/getallusers',usersQuery.getAllUsers)
 
-  app.put('/change-password/:id',(req,res)=>{
-    console.log(req.params.id)
-    res.status(200).json(req.params.id)
-  })
+  // app.put('/change-password/:id',(req,res)=>{
+  //   console.log(req.params.id)
+  //   res.status(200).json(req.params.id)
+  // })
 
   
 
@@ -61,9 +61,100 @@ app.post('/login',async (request,response)=>{
     }
 })
 
-app.post('/account-request/:id',(req,res)=>{
-  console.log(req.body)
-  res.status(200).json(req.body)
+app.post('/account-request/:id', async (request,response)=>{
+  
+  if(Number(request.params.id)!==request.body.ownerId){
+    response.status(200).json('paramsId!==ownerId')
+  }
+    const owner = await usersQuery.getUserByID(request.body.ownerId)
+    console.log(request.body)
+    console.log(owner)
+
+    let responseData = ''
+
+    switch(request.body.userStatus){
+        case 'current': 
+
+          if(owner.user_id === request.body.ownerId &&
+            owner.user_password === request.body.currentPassword &&
+            owner.user_name === request.body.ownerName &&
+            request.body.userNewPassword === request.body.userCNewPassword){
+              const modifieduser = await usersQuery.changeUserPassword(request.body.ownerId,request.body.userNewPassword)
+              responseData = modifieduser
+            }
+          else{
+            responseData = 'current-error'
+
+          }
+        break;
+        case 'other': {
+          const other = await usersQuery.getUserByID(request.body.userId)
+          switch(request.body.ownerRank){
+            case 'senior':
+             if( other.user_rank === request.body.userOldRank &&
+              other.user_id === request.body.userId &&
+              other.user_name === request.body.userName  &&
+              request.body.userNewPassword === request.body.userCNewPassword){
+                const modifieduser = await usersQuery.changeUserPassword(request.body.userId,request.body.userNewPassword)
+                responseData = modifieduser
+              }
+              else{
+                responseData = 'other-senior-error'
+
+              }
+break;
+            
+            case 'middle' :
+              if((other.user_rank === 'middle' ||
+              other.user_rank === 'junior') &&
+              other.user_rank === request.body.userOldRank &&
+              other.user_id === request.body.userId &&
+              other.user_name === request.body.userName &&
+              request.body.userNewPassword === request.body.userCNewPassword ){
+                const modifieduser = await usersQuery.changeUserPassword(request.body.userId,request.body.userNewPassword)
+                responseData = modifieduser
+              }
+              else{
+
+                responseData = 'other-middle-error'
+              }
+
+break;
+            
+            case 'junior' : 
+             if( other.user_rank === 'junior' &&
+             other.user_rank === request.body.userOldRank &&
+             other.user_id === request.body.userId &&
+             other.user_name === request.body.userName &&
+             request.body.userNewPassword === request.body.userCNewPassword){
+              const modifieduser = await usersQuery.changeUserPassword(request.body.userId,request.body.userNewPassword)
+              responseData = modifieduser
+             }
+             else{
+
+              responseData = 'other-junior-error'
+             }
+            
+          }
+          break;
+        }
+        break;
+        case 'new': {
+          if(owner.user_id === request.body.ownerId &&
+            owner.user_name === request.body.ownerName){
+              const modifieduser = await usersQuery.createUser(request.body.userName,request.body.userNewPassword,request.body.userNewRank)
+              responseData = modifieduser
+            } else{
+              
+            responseData = 'new-error'
+            }
+
+        }
+        break;
+
+    }
+  
+  response.status(200).json(responseData)
 })
 
 // NEW USER
