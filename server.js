@@ -19,6 +19,7 @@ app.use(express.static(path.join(__dirname,'public')))
 
   app.post('/db', usersQuery.createUser);
   app.post('/getallusers',usersQuery.getAllUsers)
+  app.get('/getuserbyid',usersQuery.getUserByID)
 
   // app.put('/change-password/:id',(req,res)=>{
   //   console.log(req.params.id)
@@ -282,4 +283,4 @@ break;
 
 
 
-app.listen(process.env.PORT)
+app.listen(9000)
